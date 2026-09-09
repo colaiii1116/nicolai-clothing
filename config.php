@@ -19,9 +19,9 @@ const CONTACT_PHONE = '+63 912 345 6789';
 const CONTACT_LOCATION = 'Dumaguete City, Negros Oriental, Philippines';
 
 // Database Configuration
-const DB_HOST = '127.0.0.1';
+const DB_HOST = 'localhost';
 const DB_PORT = '3306';
-const DB_NAME = 'nicolai_clothing';
+const DB_NAME = 'nicolai clothing';
 const DB_USER = 'root';
 const DB_PASS = '';
 
