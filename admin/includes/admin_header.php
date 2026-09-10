@@ -142,6 +142,7 @@ if (!isset($adminTitle)) $adminTitle = 'Admin Dashboard';
     <a href="products.php" class="<?= $activeTab === 'products' ? 'active' : '' ?>">PRODUCTS</a>
     <a href="orders.php" class="<?= $activeTab === 'orders' ? 'active' : '' ?>">ORDERS</a>
     <a href="messages.php" class="<?= $activeTab === 'messages' ? 'active' : '' ?>">INQUIRIES</a>
+    <a href="reviews.php" class="<?= $activeTab === 'reviews' ? 'active' : '' ?>">REVIEWS</a>
     <a href="../index.php" target="_blank" style="color: #6edb8f;">VIEW STORE ↗</a>
     <a href="../logout.php" style="color: #ff8c8c;">LOG OUT</a>
   </div>

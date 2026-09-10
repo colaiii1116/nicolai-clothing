@@ -9,6 +9,28 @@ if (!isset($page_title)) $page_title = SITE_NAME;
 <meta name="description" content="Nicolai Clothing — timeless style and premium quality.">
 <title><?= e($page_title) ?> | <?= e(SITE_NAME) ?></title>
 <link rel="stylesheet" href="css/style.css">
+<script>
+/* Smart scroll reset:
+   - On page reload (Ctrl+R): clear hash and go to top
+   - On navigation from another page: let hash scroll work normally
+   - On direct visit with no hash: go to top */
+(function(){
+  var nav = (performance.getEntriesByType("navigation")[0] || {}).type;
+  var isReload = (nav === "reload");
+  if (isReload) {
+    // Ctrl+R — always go to top, ignore hash
+    window.scrollTo(0, 0);
+    if (window.location.hash) {
+      history.replaceState(null, document.title,
+        window.location.pathname + window.location.search);
+    }
+  } else if (!window.location.hash) {
+    // Direct visit with no hash — go to top
+    window.scrollTo(0, 0);
+  }
+  // else: navigated here with a hash (e.g. from info.php) — let browser scroll there
+})();
+</script>
 </head>
 <body>
 <header class="site-header">
@@ -17,10 +39,10 @@ if (!isset($page_title)) $page_title = SITE_NAME;
   <nav id="main-nav" class="main-nav">
     <a href="index.php">HOME</a>
     <a href="info.php">ABOUT</a>
-    <a href="index.php#shop">SHOP</a>
-    <a href="index.php#collections">COLLECTIONS</a>
-    <a href="index.php#lookbook">LOOKBOOK</a>
-    <a href="index.php#contact">CONTACT</a>
+    <a href="index.php#shop" data-scroll="shop">SHOP</a>
+    <a href="index.php#collections" data-scroll="collections">COLLECTIONS</a>
+    <a href="index.php#lookbook" data-scroll="lookbook">LOOKBOOK</a>
+    <a href="index.php#contact" data-scroll="contact">CONTACT</a>
     <?php if (is_admin()): ?>
       <a class="nav-admin" href="admin/index.php" style="color: var(--gold); font-weight: 600;">ADMIN</a>
     <?php endif; ?>

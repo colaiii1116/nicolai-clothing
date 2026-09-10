@@ -8,13 +8,10 @@ function e(?string $value): string {
 }
 
 function redirect(string $path): never {
-    $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
-    if ($scriptDir === '' || $scriptDir === '.') {
-        $url = '/' . ltrim($path, '/');
-    } else {
-        $url = $scriptDir . '/' . ltrim($path, '/');
-    }
-    header('Location: ' . $url);
+    $appDir  = str_replace(DIRECTORY_SEPARATOR, '/', __DIR__);
+    $docRoot = str_replace(DIRECTORY_SEPARATOR, '/', rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\'));
+    $base    = ($docRoot !== '') ? rtrim(str_replace($docRoot, '', $appDir), '/') : '';
+    header('Location: ' . $base . '/' . ltrim($path, '/'));
     exit;
 }
 

@@ -14,6 +14,7 @@ $productsJson = json_encode($products, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_Q
 window.NICOLAI_PRODUCTS  = <?= $productsJson ?>;
 window.NICOLAI_LOGGED_IN = <?= is_logged_in() ? 'true' : 'false' ?>;
 window.NICOLAI_LOGIN_URL = '<?= e(rtrim(dirname($_SERVER['SCRIPT_NAME']), '/')) ?>/login.php';
+window.NICOLAI_BASE      = '<?= rtrim(str_replace("\\", "/", str_replace($_SERVER["DOCUMENT_ROOT"], "", __DIR__)), "/") ?>';
 </script>
 
 <section class="hero section-dark" id="home">
@@ -21,7 +22,7 @@ window.NICOLAI_LOGIN_URL = '<?= e(rtrim(dirname($_SERVER['SCRIPT_NAME']), '/')) 
     <p class="eyebrow">CLOTHING</p>
     <h1>WEAR<br><span>CONFIDENCE.</span><br>LIVE NICOLAI.</h1>
     <p>Timeless style. Premium quality.<br>Made for those who lead.</p>
-    <a class="btn btn-gold" href="#shop">SHOP NOW</a>
+    <a class="btn btn-gold" href="index.php#shop" data-scroll="shop" id="shopNowBtn">SHOP NOW</a>
   </div>
   <div class="hero-model"><img src="assets/products/hero-model.png" alt="Nicolai Clothing model wearing a black shirt"></div>
   <div class="hero-logo">N<span>NC</span><small>NICOLAI<br>CLOTHING</small></div>
@@ -202,6 +203,62 @@ window.NICOLAI_LOGIN_URL = '<?= e(rtrim(dirname($_SERVER['SCRIPT_NAME']), '/')) 
   </div>
 </section>
 
+<!-- ══════════════════════════════════════════════════════════
+     REVIEWS SECTION — above lookbook
+     ══════════════════════════════════════════════════════════ -->
+<section class="reviews-section section-dark" id="reviews">
+  <div class="section-heading center">
+    <p class="eyebrow">WHAT THEY SAY</p>
+    <h2>CUSTOMER REVIEWS</h2>
+    <p class="section-sub">Real experiences from real people who wear Nicolai.</p>
+  </div>
+
+  <!-- Review cards carousel -->
+  <div class="reviews-track-wrap">
+    <div class="reviews-track" id="reviewsTrack">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <!-- Write a review button -->
+  <div class="reviews-cta">
+    <button class="btn btn-gold" id="openReviewModalBtn" type="button">WRITE A REVIEW</button>
+  </div>
+</section>
+
+<!-- ── Review Modal ─────────────────────────────────────────── -->
+<div class="review-modal-overlay" id="reviewModal" aria-hidden="true">
+  <div class="review-modal" role="dialog" aria-labelledby="reviewModalTitle">
+    <button class="review-modal-close" id="closeReviewModal" aria-label="Close">&times;</button>
+    <h3 id="reviewModalTitle">SHARE YOUR EXPERIENCE</h3>
+    <p class="review-modal-sub">Tell us what you think about Nicolai Clothing.</p>
+
+    <form id="reviewForm" novalidate>
+      <!-- Star rating -->
+      <div class="star-picker" id="starPicker" role="group" aria-label="Rating">
+        <span class="star" data-val="1">★</span>
+        <span class="star" data-val="2">★</span>
+        <span class="star" data-val="3">★</span>
+        <span class="star" data-val="4">★</span>
+        <span class="star" data-val="5">★</span>
+      </div>
+      <input type="hidden" id="reviewRating" value="5">
+
+      <div class="review-field">
+        <label for="reviewName">Your Name</label>
+        <input type="text" id="reviewName" placeholder="e.g. Marcus T." maxlength="80" required>
+      </div>
+
+      <div class="review-field">
+        <label for="reviewText">Your Review</label>
+        <textarea id="reviewText" rows="4" placeholder="Tell us about your experience..." maxlength="600" required></textarea>
+      </div>
+
+      <div id="reviewFormMsg" class="review-form-msg" aria-live="polite"></div>
+      <button type="submit" class="btn btn-gold" id="submitReviewBtn">SUBMIT REVIEW</button>
+    </form>
+  </div>
+</div>
 <section class="lookbook section-light" id="lookbook">
   <div class="lookbook-image"><img src="assets/products/hero-model.png" alt="Nicolai lookbook"></div>
   <div>

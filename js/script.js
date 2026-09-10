@@ -208,7 +208,7 @@ function setThumbActive(imgFilename) {
    Showcase Product Setup
    Called when a product card is clicked or on page load
    ============================================================ */
-function setupShowcaseProduct(prod, initialColor) {
+function setupShowcaseProduct(prod, initialColor, scroll = false) {
   activeShowcaseProduct = prod;
   activeShowcaseColor   = initialColor || Object.keys(prod.colors || {})[0] || prod.color || 'Black';
   activeShowcaseSize    = 'M';
@@ -280,9 +280,11 @@ function setupShowcaseProduct(prod, initialColor) {
   });
   activeShowcaseSize = 'M';
 
-  // ── Smooth scroll to showcase ─────────────────────────────
-  const section = document.querySelector('#products');
-  if (section) section.scrollIntoView({ behavior: 'smooth' });
+  // ── Smooth scroll to showcase (only when triggered by user click) ───
+  if (scroll) {
+    const section = document.querySelector('#products');
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 /* ============================================================
@@ -462,6 +464,20 @@ function showContactStatus(el, msg, success) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // Nav links with data-scroll — smooth scroll when on same page,
+  // or navigate to href (e.g. index.php#shop) when on another page
+  document.querySelectorAll('[data-scroll]').forEach(link => {
+    link.addEventListener('click', e => {
+      const target = document.getElementById(link.dataset.scroll);
+      if (target) {
+        // Section exists on this page — smooth scroll, don't navigate
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+      // Section not found — let href navigate normally (cross-page)
+    });
+  });
+
   // 1. Cart Drawer Toggle
   document.querySelector('#cartToggleBtn')?.addEventListener('click', openCart);
   document.querySelector('#cartCloseBtn')?.addEventListener('click', closeCart);
@@ -630,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Click image/name → load this product into the showcase
     card.querySelectorAll('[data-inspect-id]').forEach(clickable => {
       clickable.addEventListener('click', () => {
-        setupShowcaseProduct(prod, prod.color || 'Black');
+        setupShowcaseProduct(prod, prod.color || 'Black', true);
       });
     });
   });
@@ -738,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const prodId = cardImg.dataset.inspectId;
         const prod   = (window.NICOLAI_PRODUCTS || []).find(p => String(p.id) === String(prodId));
         if (prod) {
-          setupShowcaseProduct(prod, prod.color || 'Black');
+          setupShowcaseProduct(prod, prod.color || 'Black', true);
         }
       });
     }
@@ -779,3 +795,148 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(() => updateCartUI());
 });
+/* ══════════════════════════════════════════════════════════════
+   REVIEWS — load, render, submit
+   ══════════════════════════════════════════════════════════════ */
+(function initReviews() {
+  const track    = document.getElementById('reviewsTrack');
+  const modal    = document.getElementById('reviewModal');
+  const openBtn  = document.getElementById('openReviewModalBtn');
+  const closeBtn = document.getElementById('closeReviewModal');
+  const form     = document.getElementById('reviewForm');
+  const msgEl    = document.getElementById('reviewFormMsg');
+  const ratingIn = document.getElementById('reviewRating');
+  const stars    = document.querySelectorAll('#starPicker .star');
+
+  if (!track) return; // not on index page
+
+  // ── Helpers ───────────────────────────────────────────────
+  function starsHtml(n) {
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+  function initials(name) {
+    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 86400)   return 'Today';
+    if (diff < 604800)  return Math.floor(diff / 86400) + 'd ago';
+    if (diff < 2592000) return Math.floor(diff / 604800) + 'w ago';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }
+
+  function buildCard(r) {
+    const card = document.createElement('div');
+    card.className = 'review-card';
+    card.innerHTML = `
+      <div class="review-stars">${starsHtml(Number(r.rating))}</div>
+      <p class="review-text">"${r.review_text}"</p>
+      <div class="review-author">
+        <div class="review-avatar">${initials(r.name)}</div>
+        <div>
+          <div class="review-name">${r.name}</div>
+          <div class="review-date">${timeAgo(r.created_at)}</div>
+        </div>
+      </div>`;
+    return card;
+  }
+
+  // ── Load reviews ──────────────────────────────────────────
+  async function loadReviews() {
+    try {
+      const res = await fetch('api/reviews.php');
+      const data = await res.json();
+      if (!data.success || !data.reviews.length) return;
+
+      track.innerHTML = '';
+      // Duplicate for seamless infinite scroll
+      const all = [...data.reviews, ...data.reviews];
+      all.forEach(r => track.appendChild(buildCard(r)));
+    } catch (e) {
+      console.warn('Reviews load failed', e);
+    }
+  }
+  loadReviews();
+
+  // ── Modal open/close ──────────────────────────────────────
+  function openModal()  { modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+  function closeModal() { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+
+  if (openBtn)  openBtn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (modal)    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Star picker ───────────────────────────────────────────
+  let selectedRating = 5;
+  stars.forEach(star => {
+    star.classList.toggle('active', Number(star.dataset.val) <= 5);
+    star.addEventListener('mouseenter', () => {
+      stars.forEach(s => s.classList.toggle('hover', Number(s.dataset.val) <= Number(star.dataset.val)));
+    });
+    star.addEventListener('mouseleave', () => {
+      stars.forEach(s => s.classList.remove('hover'));
+    });
+    star.addEventListener('click', () => {
+      selectedRating = Number(star.dataset.val);
+      ratingIn.value = selectedRating;
+      stars.forEach(s => s.classList.toggle('active', Number(s.dataset.val) <= selectedRating));
+    });
+  });
+
+  // ── Submit review ─────────────────────────────────────────
+  if (form) {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name   = document.getElementById('reviewName').value.trim();
+      const review = document.getElementById('reviewText').value.trim();
+      const rating = Number(ratingIn.value) || 5;
+      const btn    = document.getElementById('submitReviewBtn');
+
+      msgEl.className = 'review-form-msg';
+      msgEl.textContent = '';
+
+      if (!name || !review) {
+        msgEl.className = 'review-form-msg error';
+        msgEl.textContent = 'Please fill in your name and review.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'SUBMITTING…';
+
+      try {
+        const res = await fetch('api/reviews.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, rating, review })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          msgEl.className = 'review-form-msg success';
+          msgEl.textContent = '✓ Thank you! Your review has been posted.';
+          form.reset();
+          stars.forEach(s => s.classList.toggle('active', Number(s.dataset.val) <= 5));
+          selectedRating = 5;
+          ratingIn.value = 5;
+          // Prepend the new card to track
+          if (data.review) {
+            const newCard = buildCard(data.review);
+            track.prepend(newCard);
+          }
+          setTimeout(closeModal, 1800);
+        } else {
+          msgEl.className = 'review-form-msg error';
+          msgEl.textContent = (data.errors || ['Something went wrong.']).join(' ');
+        }
+      } catch (err) {
+        msgEl.className = 'review-form-msg error';
+        msgEl.textContent = 'Network error. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT REVIEW';
+      }
+    });
+  }
+})();

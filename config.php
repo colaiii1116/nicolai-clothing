@@ -21,7 +21,7 @@ const CONTACT_LOCATION = 'Dumaguete City, Negros Oriental, Philippines';
 // Database Configuration
 const DB_HOST = 'localhost';
 const DB_PORT = '3306';
-const DB_NAME = 'nicolai clothing';
+const DB_NAME = 'nicolai_clothing';
 const DB_USER = 'root';
 const DB_PASS = '';
 
